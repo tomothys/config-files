@@ -1,0 +1,154 @@
+# The following lines were added by compinstall
+zstyle ':completion:*' auto-description 'specify: %d'
+zstyle ':completion:*' completer _expand _complete _correct _approximate
+zstyle ':completion:*' format 'Completing %d'
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' menu select=2
+zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
+zstyle ':completion:*' list-colors ''
+zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
+# zstyle ':completion:*' list-colors '=*=32'
+zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
+zstyle ':completion:*' menu select=long
+zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
+zstyle ':completion:*' use-compctl false
+zstyle ':completion:*' verbose true
+# zstyle ':completion:*' expand prefix suffix
+# zstyle ':completion:*' file-sort name
+# zstyle ':completion:*' list-suffixes true
+# zstyle :compinstall filename '/home/thomasschmieck/.zshrc'
+
+zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
+zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
+
+autoload -Uz compinit
+compinit
+# End of lines added by compinstall
+
+# Lines configured by zsh-newuser-install
+HISTFILE=~/.histfile
+HISTSIZE=1000
+SAVEHIST=1000
+unsetopt beep
+# End of lines configured by zsh-newuser-install
+
+export EDITOR=nvim
+
+bindkey -v
+
+export TERM="xterm-256color"
+
+# FZF
+export FZF_DEFAULT_OPTS='--height=40% --margin=1 --padding=1 --layout=reverse --border=sharp -i -m --keep-right --filepath-word'
+
+# PROMPT
+setopt prompt_subst
+
+function git_branch_name() {
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+    if [[ $branch == "" ]]; then
+        :
+    else
+        echo " %F{red} $branch%f"
+    fi
+}
+
+PROMPT=$'\n%F{blue}%n%f  %F{yellow}  %~%f $(git_branch_name)\n 👾 '
+
+# fd - cd to selected directory
+# FZF needs to be installed
+fd() {
+    local dirs=$(find ${1:-.} -type d -not \( -name node_modules \) | fzf)
+    print -z cd $dirs
+}
+alias find-dir=fd
+
+# fh - search in your command history and execute selected command
+# FZF needs to be installed
+fh() {
+    local hist
+
+    # if used in bash replace "fc -l 1" with "history"
+    local search_result=$(fc -l 1 | sed 's/ *[0-9]* *//' | sed 's/ *$//' | sort -u | fzf)
+
+    print -z $search_result
+}
+alias find-history=fh
+
+# rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder
+rmn() {
+    local list=$(find ${1:-.} -type d | grep -v submodules | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
+
+    if [ ! -s $list ]; then
+        echo 'DELETED FOLDERS'
+
+        echo $list | xargs -I{} sh -c "echo ' \033[0;31m-\033[0;0m {}'"
+        echo $list | xargs rm -rf {}
+    else
+        echo '\033[0;31mNo node_modules found\033[0;0m'
+    fi
+}
+alias rm-node-modules=rmn
+
+rmi() {
+    if test -d ./infrastructure; then
+        sudo chmod -R 777 infrastructure && rm -rf infrastructure
+        echo '\033[0;32minfrastructure successfully removed\033[0;0m'
+    else
+        echo '\033[0;31minfrastructure directory not found\033[0;0m'
+    fi
+}
+alias rm-infrastructure=rmi
+
+# ALIAS
+# general aliases
+alias ll="exa -l"
+alias la="exa -a"
+alias tree="exa --tree"
+alias q=exit
+alias v=nvim
+alias open=explorer.exe
+# git related aliases
+alias ga='git add'
+alias gc='git commit -m'
+alias gs='git status'
+alias gf='git fetch'
+alias gr='git reset HEAD~1'
+alias gp='git pull'
+alias gP='git push'
+alias gco='git checkout --recurse-submodule'
+alias gcl='git clone --recurse-submodule'
+
+# Key bindings
+bindkey "^[[A" history-beginning-search-backward
+bindkey "^[[B" history-beginning-search-forward
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/bin" ] ; then
+    PATH="$HOME/bin:$PATH"
+fi
+
+# set PATH so it includes user's private bin if it exists
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+
+# linuxbrew
+#eval "$(/bin/brew shellenv)"
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+# Add Volta to PATH
+if [ -d "$HOME/.volta/bin" ] ; then
+    PATH="$HOME/.volta/bin:$PATH"
+fi
+
+# pnpm
+export PNPM_HOME="/home/thomasschmieck/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
+
+export CDPATH=$HOME/personal-workspace:$HOME/workspace:$HOME/.config
