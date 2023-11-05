@@ -1,6 +1,10 @@
 #-----------------------------------------------
 # The following lines were added by compinstall 
 #-----------------------------------------------
+# Use modern completion system
+autoload -Uz compinit
+compinit
+
 zstyle ':completion:*' auto-description 'specify: %d'
 zstyle ':completion:*' completer _expand _complete _correct _approximate
 zstyle ':completion:*' format 'Completing %d'
@@ -9,22 +13,15 @@ zstyle ':completion:*' menu select=2
 zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*' list-colors ''
 zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
-# zstyle ':completion:*' list-colors '=*=32'
 zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
 zstyle ':completion:*' menu select=long
 zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
 zstyle ':completion:*' use-compctl false
 zstyle ':completion:*' verbose true
-# zstyle ':completion:*' expand prefix suffix
-# zstyle ':completion:*' file-sort name
-# zstyle ':completion:*' list-suffixes true
 # zstyle :compinstall filename '/home/thomasschmieck/.zshrc'
 
 zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
 zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
-
-autoload -Uz compinit
-compinit
 #-----------------------------------
 # End of lines added by compinstall 
 #-----------------------------------
@@ -44,7 +41,7 @@ unsetopt beep
 # General 
 #---------
 export EDITOR=nvim
-export TERM="xterm-256color"
+export TERM=screen-256color-bce
 
 #------------- 
 # Key bindings 
