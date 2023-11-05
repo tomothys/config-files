@@ -1,4 +1,6 @@
-# The following lines were added by compinstall
+#-----------------------------------------------
+# The following lines were added by compinstall 
+#-----------------------------------------------
 zstyle ':completion:*' auto-description 'specify: %d'
 zstyle ':completion:*' completer _expand _complete _correct _approximate
 zstyle ':completion:*' format 'Completing %d'
@@ -23,25 +25,79 @@ zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
 
 autoload -Uz compinit
 compinit
-# End of lines added by compinstall
+#-----------------------------------
+# End of lines added by compinstall 
+#-----------------------------------
 
-# Lines configured by zsh-newuser-install
+#-----------------------------------------
+# Lines configured by zsh-newuser-install 
+#-----------------------------------------
 HISTFILE=~/.histfile
 HISTSIZE=1000
 SAVEHIST=1000
 unsetopt beep
-# End of lines configured by zsh-newuser-install
+#------------------------------------------------
+# End of lines configured by zsh-newuser-install 
+#------------------------------------------------
 
+#---------
+# General 
+#---------
 export EDITOR=nvim
-
-bindkey -v
-
 export TERM="xterm-256color"
 
-# FZF
+#------------- 
+# Key bindings 
+#------------- 
+bindkey "^[[A" history-beginning-search-backward
+bindkey "^[[B" history-beginning-search-forward
+bindkey -v
+
+#---------------------------------------------------------
+# set PATH so it includes user's private bin if it exists 
+#---------------------------------------------------------
+if [ -d "$HOME/bin" ] ; then
+    PATH="$HOME/bin:$PATH"
+fi
+
+if [ -d "$HOME/.local/bin" ] ; then
+    PATH="$HOME/.local/bin:$PATH"
+fi
+
+#-----------
+# linuxbrew 
+#-----------
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+#---------
+# cd path 
+#---------
+export CDPATH=$HOME/personal-workspace:$HOME/workspace:$HOME/.config
+
+#-------
+# Volta 
+#-------
+if [ -d "$HOME/.volta/bin" ] ; then
+    PATH="$HOME/.volta/bin:$PATH"
+fi
+
+#------
+# pnpm 
+#------
+export PNPM_HOME="/home/thomasschmieck/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
+#-----
+# FZF 
+#-----
 export FZF_DEFAULT_OPTS='--height=40% --margin=1 --padding=1 --layout=reverse --border=sharp -i -m --keep-right --filepath-word'
 
-# PROMPT
+#--------
+# PROMPT 
+#--------
 setopt prompt_subst
 
 function git_branch_name() {
@@ -56,16 +112,21 @@ function git_branch_name() {
 
 PROMPT=$'\n%F{blue}%n%f  %F{yellow}  %~%f $(git_branch_name)\n 👾 '
 
-# fd - cd to selected directory
-# FZF needs to be installed
+#-------------------------------
+# fd - cd to selected directory 
+# FZF needs to be installed     
+#-------------------------------
 fd() {
     local dirs=$(find ${1:-.} -type d -not \( -name node_modules \) | fzf)
     print -z cd $dirs
 }
 alias find-dir=fd
 
-# fh - search in your command history and execute selected command
-# FZF needs to be installed
+
+#----------------------------------------------------------------- 
+# fh - search in your command history and execute selected command 
+# FZF needs to be installed                                        
+#----------------------------------------------------------------- 
 fh() {
     local hist
 
@@ -76,7 +137,9 @@ fh() {
 }
 alias find-history=fh
 
-# rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder
+#-------------------------------------------------------------------------------------------------------
+# rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder 
+#-------------------------------------------------------------------------------------------------------
 rmn() {
     local list=$(find ${1:-.} -type d | grep -v submodules | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
 
@@ -101,7 +164,9 @@ rmi() {
 }
 alias rm-infrastructure=rmi
 
-# ALIAS
+#---------
+# Aliases 
+#---------
 # general aliases
 alias ll="exa -l"
 alias la="exa -a"
@@ -109,6 +174,7 @@ alias tree="exa --tree"
 alias q=exit
 alias v=nvim
 alias open=explorer.exe
+alias tmux='tmux -2'
 # git related aliases
 alias ga='git add'
 alias gc='git commit -m'
@@ -120,35 +186,3 @@ alias gP='git push'
 alias gco='git checkout --recurse-submodule'
 alias gcl='git clone --recurse-submodule'
 
-# Key bindings
-bindkey "^[[A" history-beginning-search-backward
-bindkey "^[[B" history-beginning-search-forward
-
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
-fi
-
-# set PATH so it includes user's private bin if it exists
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
-
-# linuxbrew
-#eval "$(/bin/brew shellenv)"
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-
-# Add Volta to PATH
-if [ -d "$HOME/.volta/bin" ] ; then
-    PATH="$HOME/.volta/bin:$PATH"
-fi
-
-# pnpm
-export PNPM_HOME="/home/thomasschmieck/.local/share/pnpm"
-case ":$PATH:" in
-  *":$PNPM_HOME:"*) ;;
-  *) export PATH="$PNPM_HOME:$PATH" ;;
-esac
-# pnpm end
-
-export CDPATH=$HOME/personal-workspace:$HOME/workspace:$HOME/.config
