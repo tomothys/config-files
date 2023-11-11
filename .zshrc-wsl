@@ -141,7 +141,7 @@ rmn() {
     local list=$(find ${1:-.} -type d | grep -v submodules | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
 
     if [ ! -s $list ]; then
-        echo 'DELETED FOLDERS'
+        echo 'DELETING FOLDERS'
 
         echo $list | xargs -I{} sh -c "echo ' \033[0;31m-\033[0;0m {}'"
         echo $list | xargs rm -rf {}
@@ -154,7 +154,12 @@ alias rm-node-modules=rmn
 rmi() {
     if test -d ./infrastructure; then
         sudo chmod -R 777 infrastructure && rm -rf infrastructure
-        echo '\033[0;32minfrastructure successfully removed\033[0;0m'
+
+        if test -d ./infrastructure; then
+            echo '\033[0;31mCould not remove infrastructure folder\033[0;0m'
+        else
+            echo '\033[0;32minfrastructure successfully removed\033[0;0m'
+        fi
     else
         echo '\033[0;31minfrastructure directory not found\033[0;0m'
     fi
@@ -172,14 +177,4 @@ alias q=exit
 alias v=nvim
 alias open=explorer.exe
 alias tmux='tmux -2'
-# git related aliases
-alias ga='git add'
-alias gc='git commit -m'
-alias gs='git status'
-alias gf='git fetch'
-alias gr='git reset HEAD~1'
-alias gp='git pull'
-alias gP='git push'
-alias gco='git checkout --recurse-submodule'
-alias gcl='git clone --recurse-submodule'
 
