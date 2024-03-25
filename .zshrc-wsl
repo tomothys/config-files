@@ -41,7 +41,7 @@ unsetopt beep
 # General 
 #---------
 export EDITOR=nvim
-export TERM=xterm-256color
+export TERM=screen-256color
 
 #------------- 
 # Key bindings 
@@ -139,6 +139,7 @@ alias find-history=fh
 #-------------------------------------------------------------------------------------------------------
 rmn() {
     local list=$(find ${1:-.} -type d | grep -v submodules | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
+    # local list=$(find ${1:-.} -type d | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
 
     if [ ! -s $list ]; then
         echo 'DELETING FOLDERS'
@@ -166,10 +167,32 @@ rmi() {
 }
 alias rm-infrastructure=rmi
 
+alias dwatch="docker compose watch"
+alias docker-watch=dwatch
+alias dlogs="docker compose logs -f -t"
+alias docker-logs=dlogs
+alias dup="docker compose up"
+alias docker-up=dup
+alias dup-f-b="docker compose up --force-recreate --build"
+alias ddown="docker compose down"
+alias docker-down=ddown
+
+pwatch() {
+    if [ $# -eq 0 ]
+        pnpm --filter $1 build:watch
+    then
+        echo "No arguments supplied"
+    fi
+}
+alias pnpm-watch=pwatch
+alias plocal=pnpm build:local
+alias pnpm-local=plocal
+
 #---------
 # Aliases 
 #---------
 # general aliases
+alias ls=exa
 alias ll="exa -l"
 alias la="exa -a"
 alias tree="exa --tree"
