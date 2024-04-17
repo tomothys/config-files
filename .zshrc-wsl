@@ -192,12 +192,11 @@ alias pnpm-local=plocal
 # Aliases 
 #---------
 # general aliases
-alias ls=exa
-alias ll="exa -l"
-alias la="exa -a"
+# alias ls=exa
+# alias ll="exa -l"
+# alias la="exa -a"
 alias tree="exa --tree"
 alias q=exit
 alias v=nvim
 alias open=explorer.exe
 alias tmux='tmux -2'
-
