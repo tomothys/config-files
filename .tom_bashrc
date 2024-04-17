@@ -1,0 +1,102 @@
+export TERM=screen-256color-bce
+
+# Keep 1000 lines of history within the shell and save it to ~/.zsh_history:
+HISTSIZE=1000
+SAVEHIST=1000
+HISTFILE=~/.zsh_history
+
+#region --------- PNPM
+export PNPM_HOME="/home/thomasschmieck/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+#endregion
+
+#region --------- VOLTA
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"
+#endregion
+
+#region --------- MASON
+export MASON_BIN="$HOME/.local/share/nvim/mason/bin"
+export PATH="$MASON_BIN:$PATH"
+#endregion Mason
+
+#region --------- NEOVIM
+export NVIM_BIN="$HOME/nvim_bins/nvim-macos-0.9.4/bin"
+export PATH="$NVIM_BIN:$PATH"
+#endregion
+
+export CDPATH="$CDPATH:$HOME/.config:$HOME/Projects:$HOME/Work"
+
+#region --------- FZF
+export FZF_DEFAULT_OPTS='--height=40% --margin=1 --padding=1 --layout=reverse --border=sharp -i -m --keep-right --filepath-word'
+#endregion
+
+#region --------- PROMPT
+get_git_branch_name() {
+    branch="$(git symbolic-ref HEAD 2> /dev/null | awk 'BEGIN{FS="/"} {print $NF}')"
+
+    if [ ! -z "$branch" ]; then
+        echo -e " \e[0;31m($branch)\e[0m"
+    fi
+}
+
+get_node_version() {
+    node="$(node -v)"
+
+    if [ ! -z "$node" ]; then
+        echo -e " \e[0;32m($node)\e[0m"
+    fi
+}
+
+PS0="\n"
+PS1="\n\[\e[0;34m\]\w\$(get_node_version)\$(get_git_branch_name)\n\[\e[0m\]\u \[\e[0;33m\]> \[\e[0m\]"
+#endregion
+
+#-------------------------------
+# fd - cd to selected directory
+# FZF needs to be installed
+#-------------------------------
+fd() {
+    local dirs=$(find ${1:-.} -type d -not \( -name node_modules \) | fzf)
+    cd $dirs
+}
+alias find-dir=fd
+
+#------------------------------------------------------------------
+# fh - search in your command history and execute selected command
+# FZF needs to be installed
+#------------------------------------------------------------------
+fh() {
+    # if used in bash replace "fc -l 1" with "history"
+    local search_result=$(history | sed 's/ *[0-9]* *//' | sed 's/ *$//' | sort -u | fzf)
+    $search_result
+}
+alias find-history=fh
+
+
+#-------------------------------------------------------------------------------------------------------
+# rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder 
+#-------------------------------------------------------------------------------------------------------
+rmn() {
+    local list=$(find ${1:-.} -type d | grep -v submodules | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
+
+    if [ ! -s $list ]; then
+        echo 'DELETED FOLDERS'
+
+        echo $list | xargs -I{} sh -c "echo ' \033[0;31m-\033[0;0m {}'"
+        echo $list | xargs rm -rf {}
+    else
+        echo '\033[0;31mNo node_modules found\033[0;0m'
+    fi
+}
+alias rm-node-modules=rmn
+
+#-------
+# ALIAS
+#-------
+alias q=exit
+alias v=nvim
+alias ls='ls --color=auto'
