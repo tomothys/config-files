@@ -1,5 +1,8 @@
 #region --------- HOMEBREW
-eval "$(homebrew/bin/brew shellenv)"
+case ":$PATH:" in
+  *":/opt/homebrew/bin/brew:"*) ;;
+  *) export PATH="/opt/homebrew/bin/brew:$PATH" ;;
+esac
 #endregion
 
 if [ -f ~/personal-workspace/config-files/.bashrc ]; then
