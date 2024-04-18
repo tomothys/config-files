@@ -1,13 +1,7 @@
-if [ -f ./.bashrc ]; then
-    source ./.bashrc
-fi
-
 #region --------- LINUXBREW
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
-#endregion
-
-#region --------- CD PATH
-export CDPATH=$CDPATH:$HOME/personal-workspace:$HOME/workspace
+if [ -d "/home/linuxbrew/.linuxbrew/bin" ] && [[ ! $PATH =~ (^|:)/home/linuxbrew/.linuxbrew/bin(:|$) ]]; then
+    PATH+=$PATH:/home/linuxbrew/.linuxbrew/bin
+fi
 #endregion
 
 #region --------- FUNCTIONS
@@ -30,3 +24,7 @@ alias rm-infrastructure=rmi
 #region --------- ALIASES
 alias open=explorer.exe
 #endregion
+
+if [ -f ~/personal-workspace/config-files/.bashrc ]; then
+    source ~/personal-workspace/config-files/.bashrc
+fi

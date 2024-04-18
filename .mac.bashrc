@@ -1,7 +1,7 @@
-if [ -f ./.bashrc ]; then
-    source ./.bashrc
-fi
-
-#region --------- CD PATH
-export CDPATH=$CDPATH:$HOME/Project
+#region --------- HOMEBREW
+eval "$(homebrew/bin/brew shellenv)"
 #endregion
+
+if [ -f ~/personal-workspace/config-files/.bashrc ]; then
+    source ~/personal-workspace/config-files/.bashrc
+fi

@@ -3,13 +3,15 @@ export EDITOR=nvim
 export TERM=screen-256color
 
 #set PATH so it includes user's private bin if it exists 
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
-fi
+case ":$PATH:" in
+  *":$HOME/bin:"*) ;;
+  *) export PATH="$HOME/bin:$PATH" ;;
+esac
 
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
 
 # don't put duplicate lines or lines starting with space in the history.
 # See bash(1) for more options
@@ -43,12 +45,15 @@ fi
 #endregion
 
 #region --------- CD PATH
-export CDPATH=$HOME/.config
+export CDPATH=$HOME/.config:$HOME/personal-workspace:$HOME/workspace
 #endregion
 
 #region --------- NEOVIM
 export NVIM_BIN="$HOME/nvim-bins/nvim-0.9.5/bin"
-export PATH="$NVIM_BIN:$PATH"
+case ":$PATH:" in
+  *":$NVIM_BIN:"*) ;;
+  *) export PATH="$NVIM_BIN:$PATH" ;;
+esac
 #endregion
 
 #region --------- PNPM
@@ -62,9 +67,10 @@ esac
 #region --------- VOLTA
 export VOLTA_FEATURE_PNPM=1
 
-if [ -d "$HOME/.volta/bin" ] ; then
-    PATH="$HOME/.volta/bin:$PATH"
-fi
+case ":$PATH:" in
+  *":$HOME/.volta/bin:"*) ;;
+  *) export PATH="$HOME/.volta/bin:$PATH" ;;
+esac
 #endregion
 
 #region --------- FZF
