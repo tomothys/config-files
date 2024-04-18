@@ -1,7 +1,7 @@
 #region --------- HOMEBREW
 case ":$PATH:" in
-  *":/opt/homebrew/bin/brew:"*) ;;
-  *) export PATH="/opt/homebrew/bin/brew:$PATH" ;;
+  *":/opt/homebrew/bin:"*) ;;
+  *) export PATH="/opt/homebrew/bin:$PATH" ;;
 esac
 #endregion
 
