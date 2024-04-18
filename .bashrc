@@ -130,16 +130,15 @@ alias find-history=fh
 # rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder 
 #-------------------------------------------------------------------------------------------------------
 rmn() {
-    local list=$(find ${1:-.} -type d | grep -v submodules | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
-    # local list=$(find ${1:-.} -type d | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
+    local list=$(find ${1:-.} -type d -name "node_modules" -not -path "./node_modules/*" -and -not -path "./submodules/*" | sort -u)
 
     if [ -z "$list" ]; then
         echo -e "\e[0;31mNo node_modules found\e[0m"
     else
         echo "DELETING FOLDERS"
 
-        echo $list | xargs -n 1 echo -e "\e[0;31m -\e[0m"
-        echo $list | xargs rm -rf
+        echo "$list" | xargs -I dir sh -c "printf ' \e[0;31m -\e[0m dir\n'"
+        echo "$list" | xargs rm -rf
     fi
 }
 alias rm-node-modules=rmn
