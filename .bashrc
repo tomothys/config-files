@@ -101,33 +101,27 @@ PS1="\n\[\e[0;34m\]\w\$(get_node_version)\$(get_git_branch_name)\n\[\e[0m\]\u \[
 #endregion
 
 #region --------- FUNCTIONS
-#-------------------------------
-# fd - cd to selected directory 
-# FZF needs to be installed     
-#-------------------------------
-fd() {
-    local dirs=$(find ${1:-.} -type d -not \( -name node_modules \) | fzf)
-    cd $dirs
+#------------------------------------------------------------------------------
+# better_cd - open up a fuzzy finder to look for a path to change directory to
+#------------------------------------------------------------------------------
+bcd() {
+    cd $(find ${1:-.} -type d -not -name "node_modules" | fzf)
 }
-alias find-dir=fd
+alias better-cd=bcd
 
-
-#----------------------------------------------------------------- 
-# fh - search in your command history and execute selected command 
-# FZF needs to be installed                                        
-#----------------------------------------------------------------- 
+#--------------------------------------------------------------------------------------------
+# fh - open up a fuzzy finder to search in your command history and execute selected command
+#--------------------------------------------------------------------------------------------
 fh() {
-    local hist
-
-    # if used in bash replace "fc -l 1" with "history"
+    # if used in zsh replace "history" with "fc -l 1"
     local search_result=$(history | sed 's/ *[0-9]* *//' | sed 's/ *$//' | sort -u | fzf)
 
-    $search_result
+    eval "$search_result"
 }
 alias find-history=fh
 
 #-------------------------------------------------------------------------------------------------------
-# rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder 
+# rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder
 #-------------------------------------------------------------------------------------------------------
 rmn() {
     local list=$(find ${1:-.} -type d -name "node_modules" -not -path "./node_modules/*" -and -not -path "./submodules/*" | sort -u)
