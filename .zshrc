@@ -1,106 +1,232 @@
-export TERM=tmux-256color
+#region --------- GENERAL 
+# Use modern completion system
+autoload -Uz compinit
+compinit
 
-# Keep 1000 lines of history within the shell and save it to ~/.zsh_history:
+export EDITOR=nvim
+export TERM=screen-256color
+
+# set PATH so it includes user's private bin if it exists 
+case ":$PATH:" in
+  *":$HOME/bin:"*) ;;
+  *) export PATH="$HOME/bin:$PATH" ;;
+esac
+
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
+HISTFILE=~/.histfile
 HISTSIZE=1000
 SAVEHIST=1000
-HISTFILE=~/.zsh_history
+unsetopt beep
 
-# pnpm
+bindkey "^[[A" history-beginning-search-backward
+bindkey "^[[B" history-beginning-search-forward
+# bindkey -v # vi mode
+
+zstyle ':completion:*' menu select
+
+zmodload zsh/complist
+bindkey -M menuselect 'h' vi-backward-char
+bindkey -M menuselect 'k' vi-up-line-or-history
+bindkey -M menuselect 'j' vi-down-line-or-history
+bindkey -M menuselect 'l' vi-forward-char
+bindkey -M menuselect 'o' accept-line
+
+setopt ALWAYS_TO_END
+setopt AUTO_PARAM_SLASH
+#endregion
+
+#region --------- PROMPT 
+setopt prompt_subst
+
+function get_git_branch_name() {
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+
+    if [[ -z $branch ]]; then
+        :
+    else
+        echo "%F{red}($branch)%f"
+    fi
+}
+
+function get_node_version() {
+    node_version=$(node -v)
+
+    if [[ -z $node_version ]]; then
+        :
+    else
+        echo "%F{green}($node_version)%f"
+    fi
+}
+
+PROMPT=$'\n%F{blue}%~%f $(get_node_version) $(get_git_branch_name)\n%n %F{yellow}>%f '
+#endregion
+
+#region --------- CD PATH 
+export CDPATH=$HOME/personal-workspace:$HOME/workspace:$HOME/.config
+#endregion
+
+#region --------- NEOVIM
+export NVIM_BIN="$HOME/nvim-bins/nvim-0.9.5/bin"
+case ":$PATH:" in
+  *":$NVIM_BIN:"*) ;;
+  *) export PATH="$NVIM_BIN:$PATH" ;;
+esac
+#endregion
+
+#region --------- VOLTA 
+export VOLTA_FEATURE_PNPM=1
+
+case ":$PATH:" in
+  *":$HOME/.volta/bin:"*) ;;
+  *) export PATH="$HOME/.volta/bin:$PATH" ;;
+esac
+#endregion
+
+#region --------- PNPM 
 export PNPM_HOME="/home/thomasschmieck/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
-# pnpm end
-# Volta
-export VOLTA_HOME="$HOME/.volta"
-export MASON_BIN="$HOME/.local/share/nvim/mason/bin"
-export PATH="$VOLTA_HOME/bin:$MASON_BIN:$PATH"
+#endregion
 
-# neovim path
-export NVIM_BIN="$HOME/nvim_bins/nvim-macos-0.9.4/bin"
-export PATH="$NVIM_BIN:$PATH"
+#region --------- FZF 
+eval "$(fzf --zsh)"
 
-export CDPATH="$CDPATH:$HOME/.config:$HOME/Projects"
-
-#-----------------
-# Auto-completion
-#-----------------
-# # Use modern completion system
-autoload -Uz compinit
-compinit
-
-zstyle ':completion:*' auto-description 'specify: %d'
-zstyle ':completion:*' completer _expand _complete _correct _approximate
-zstyle ':completion:*' format 'Completing %d'
-zstyle ':completion:*' group-name ''
-zstyle ':completion:*' menu select=2
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
-zstyle ':completion:*' list-colors ''
-zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
-zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
-zstyle ':completion:*' menu select=long
-zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
-zstyle ':completion:*' use-compctl false
-zstyle ':completion:*' verbose true
-
-zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
-zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
-
-#-----
-# FZF
-#-----
 export FZF_DEFAULT_OPTS='--height=40% --margin=1 --padding=1 --layout=reverse --border=sharp -i -m --keep-right --filepath-word'
+#endregion
 
-#--------
-# PROMPT
-#--------
-setopt prompt_subst
+#region --------- FUNCTIONS
+#------------------------------------------------------------------------------
+# better_cd - open up a fuzzy finder to look for a path to change directory to
+#------------------------------------------------------------------------------
+bcd() {
+    cd $(find ${1:-$HOME} -type d -not -name "node_modules" -and -not -name ".git" | fzf)
+}
+alias better-cd=bcd
 
-function git_branch_name() {
-    branch=$(git symbolic-ref HEAD 2> /dev/null | awk 'BEGIN{FS="/"} {print $NF}')
 
-    if [[ $branch == "" ]];
-    then
-        :
+#------------------------------------------------
+# lf cd - open file explorer to change directory
+#------------------------------------------------
+lfcd() {
+    cd $(lf ${1:-$HOME})
+}
+
+
+#-------------------------------------------------------------------------------------------------------
+# rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder
+#-------------------------------------------------------------------------------------------------------
+rmn() {
+    local list=$(find ${1:-.} -type d -name "node_modules" -not -path "./node_modules/*" -and -not -path "./submodules/*" | sort -u)
+
+    if [ -z "$list" ]; then
+        echo "\e[0;31mNo node_modules found\e[0m"
     else
-        echo "%F{red} $branch%f"
+        echo "DELETING FOLDERS"
+
+        echo "$list" | xargs -I dir sh -c "echo ' \e[0;31m -\e[0m dir'"
+        echo "$list" | xargs rm -rf
     fi
 }
+alias rm-node-modules=rmn
 
-PROMPT=$'\n%F{blue}%n%f %F{yellow}  %~%f $(git_branch_name)\n > '
+rmi() {
+    if test -d ./infrastructure; then
+        sudo chmod -R 777 infrastructure && rm -rf infrastructure
 
-#-------------------------------
-# fd - cd to selected directory
-# FZF needs to be installed
-#-------------------------------
-fd() {
-    local dir
-    dir=$(find ${1:-.} -path '*/\.*' -prune -o -type d -not \( -name node_modules -prune \) -print 2> /dev/null | fzf +m) && cd "$dir"
+        if test -d ./infrastructure; then
+            echo '\e[0;31mCould not remove infrastructure folder\e[0m'
+        else
+            echo '\e[0;31minfrastructure successfully removed\e[0m'
+        fi
+    else
+        echo '\e[0;31minfrastructure directory not found\e[0m'
+    fi
 }
+alias rm-infrastructure=rmi
 
-#------------------------------------------------------------------
-# fh - search in your command history and execute selected command
-# FZF needs to be installed
-#------------------------------------------------------------------
-fh() {
-    eval $( ([ -n "$ZSH_NAME" ] && fc -l 1 || history) | fzf +s --tac | sed 's/ *[0-9]* *//')
+#--------------------------------------------
+# open fuzzy finder to execute docker binary
+#--------------------------------------------
+dock() {
+    local commands="docker compose up
+docker compose up --force-recreate --build
+docker compose up -d
+docker compose up --force-recreate --build -d
+docker compose down
+docker compose down -v
+docker compose watch
+docker compose logs -f -t"
+
+    eval "$(echo $commands | fzf)"
 }
+#-----------------------------------------
+# open fuzzy finder to execute git binary
+#-----------------------------------------
+g() {
+    local commands="git status
+git pull
+git add
+git restore
+git commit -m
+git commit
+git restore --staged
+git push"
 
-#-------
-# ALIAS
-#-------
-alias ls=exa
-alias ll="exa -l"
+    local chosen_command=$(echo $commands | fzf)
+
+    case $chosen_command in
+        *status|*commit|*push|*pull)
+            echo $chosen_command
+            eval "$chosen_command"
+            ;;
+        *add)
+            echo "git add"
+            local chosen_files=$(git diff --name-only | fzf | tr "\n" " ")
+            eval "git add $chosen_files && git status"
+            ;;
+        *restore)
+            echo "git restore"
+            local chosen_files=$(git diff --cached --name-only | fzf | tr "\n" " ")
+            eval "git restore $chosen_files && git status"
+            ;;
+        *commit*-m)
+            echo "git commit -m"
+            printf "Commit message: "
+            read message
+            git commit -m "$message"
+            ;;
+        *restore*--staged)
+            echo "git restore --staged"
+            local chosen_files=$(git diff --cached --name-only | fzf | tr "\n" " ")
+            eval "git restore --staged $chosen_files && git status"
+            ;;
+    esac
+}
+#endregion
+
+#region --------- ALIASES
+# general
+alias ls="ls --color"
+alias grep="grep --color=auto"
+alias fgrep="fgrep --color=auto"
+alias egrep="egrep --color=auto"
+alias dir='dir --color=auto'
+alias vdir='vdir --color=auto'
+
+# general aliases
 alias q=exit
 alias v=nvim
-alias lg=lazygit
+alias open=explorer.exe
 
-#--------------
-# Key bindings
-#--------------
-bindkey "^[[A" history-beginning-search-backward
-bindkey "^[[B" history-beginning-search-forward
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# fh - open up a fuzzy finder to search in your command history and execute selected command
+# if used in bash replace "fc -l 1" with "history"
+alias fh="fc -l 1 | sed 's/ *[0-9]* *//' | sed 's/ *$//' | sort -u | fzf"
+alias find-history=fh
+#endregion
 
