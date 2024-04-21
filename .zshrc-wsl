@@ -1,153 +1,145 @@
-#-----------------------------------------------
-# The following lines were added by compinstall 
-#-----------------------------------------------
+#region --------- GENERAL 
 # Use modern completion system
 autoload -Uz compinit
 compinit
 
-zstyle ':completion:*' auto-description 'specify: %d'
-zstyle ':completion:*' completer _expand _complete _correct _approximate
-zstyle ':completion:*' format 'Completing %d'
-zstyle ':completion:*' group-name ''
-zstyle ':completion:*' menu select=2
-zstyle ':completion:*:default' list-colors ${(s.:.)LS_COLORS}
-zstyle ':completion:*' list-colors ''
-zstyle ':completion:*' list-prompt %SAt %p: Hit TAB for more, or the character to insert%s
-zstyle ':completion:*' matcher-list '' 'm:{a-z}={A-Z}' 'm:{a-zA-Z}={A-Za-z}' 'r:|[._-]=* r:|=* l:|=*'
-zstyle ':completion:*' menu select=long
-zstyle ':completion:*' select-prompt %SScrolling active: current selection at %p%s
-zstyle ':completion:*' use-compctl false
-zstyle ':completion:*' verbose true
-zstyle :compinstall filename '/home/thomasschmieck/.zshrc'
+export EDITOR=nvim
+export TERM=screen-256color
 
-zstyle ':completion:*:*:kill:*:processes' list-colors '=(#b) #([0-9]#)*=0=01;31'
-zstyle ':completion:*:kill:*' command 'ps -u $USER -o pid,%cpu,tty,cputime,cmd'
-#-----------------------------------
-# End of lines added by compinstall 
-#-----------------------------------
+# set PATH so it includes user's private bin if it exists 
+case ":$PATH:" in
+  *":$HOME/bin:"*) ;;
+  *) export PATH="$HOME/bin:$PATH" ;;
+esac
 
-#-----------------------------------------
-# Lines configured by zsh-newuser-install 
-#-----------------------------------------
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) export PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
 HISTFILE=~/.histfile
 HISTSIZE=1000
 SAVEHIST=1000
 unsetopt beep
-#------------------------------------------------
-# End of lines configured by zsh-newuser-install 
-#------------------------------------------------
 
-#---------
-# General 
-#---------
-export EDITOR=nvim
-export TERM=screen-256color
+zstyle ':completion:*' menu select
 
-#------------- 
-# Key bindings 
-#------------- 
+zmodload zsh/complist
+bindkey -M menuselect 'h' vi-backward-char
+bindkey -M menuselect 'k' vi-up-line-or-history
+bindkey -M menuselect 'j' vi-down-line-or-history
+bindkey -M menuselect 'l' vi-forward-char
+bindkey -M menuselect 'o' accept-line
+
+setopt ALWAYS_TO_END
+setopt AUTO_PARAM_SLASH
+#endregion
+
+#region --------- KEY BINDINGS
 bindkey "^[[A" history-beginning-search-backward
 bindkey "^[[B" history-beginning-search-forward
 bindkey -v
+#endregion
 
-#---------------------------------------------------------
-# set PATH so it includes user's private bin if it exists 
-#---------------------------------------------------------
-if [ -d "$HOME/bin" ] ; then
-    PATH="$HOME/bin:$PATH"
-fi
+#region --------- PROMPT 
+setopt prompt_subst
 
-if [ -d "$HOME/.local/bin" ] ; then
-    PATH="$HOME/.local/bin:$PATH"
-fi
+function get_git_branch_name() {
+    branch=$(git symbolic-ref --short HEAD 2>/dev/null)
 
-#-----------
-# linuxbrew 
-#-----------
+    if [[ -z $branch ]]; then
+        :
+    else
+        echo "%F{red}($branch)%f"
+    fi
+}
+
+function get_node_version() {
+    node_version=$(node -v)
+
+    if [[ -z $node_version ]]; then
+        :
+    else
+        echo "%F{green}($node_version)%f"
+    fi
+}
+
+PROMPT=$'\n%F{blue} %~%f $(get_node_version) $(get_git_branch_name)\n %n %F{yellow}>%f '
+#endregion
+
+#region --------- LINUXBREW 
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+#endregion
 
-#---------
-# cd path 
-#---------
+#region --------- CD PATH 
 export CDPATH=$HOME/personal-workspace:$HOME/workspace:$HOME/.config
+#endregion
 
-#-------
-# Volta 
-#-------
-if [ -d "$HOME/.volta/bin" ] ; then
-    PATH="$HOME/.volta/bin:$PATH"
-fi
+#region --------- NEOVIM
+export NVIM_BIN="$HOME/nvim-bins/nvim-0.9.5/bin"
+case ":$PATH:" in
+  *":$NVIM_BIN:"*) ;;
+  *) export PATH="$NVIM_BIN:$PATH" ;;
+esac
+#endregion
 
-#------
-# pnpm 
-#------
+#region --------- VOLTA 
+export VOLTA_FEATURE_PNPM=1
+
+case ":$PATH:" in
+  *":$HOME/.volta/bin:"*) ;;
+  *) export PATH="$HOME/.volta/bin:$PATH" ;;
+esac
+#endregion
+
+#region --------- PNPM 
 export PNPM_HOME="/home/thomasschmieck/.local/share/pnpm"
 case ":$PATH:" in
   *":$PNPM_HOME:"*) ;;
   *) export PATH="$PNPM_HOME:$PATH" ;;
 esac
+#endregion
 
-#-----
-# FZF 
-#-----
+#region --------- FZF 
+eval "$(fzf --zsh)"
+
 export FZF_DEFAULT_OPTS='--height=40% --margin=1 --padding=1 --layout=reverse --border=sharp -i -m --keep-right --filepath-word'
+#endregion
 
-#--------
-# PROMPT 
-#--------
-setopt prompt_subst
-
-function git_branch_name() {
-    branch=$(git symbolic-ref --short HEAD 2>/dev/null)
-
-    if [[ $branch == "" ]]; then
-        :
-    else
-        echo " %F{red} $branch%f"
-    fi
+#region --------- FUNCTIONS
+#------------------------------------------------------------------------------
+# better_cd - open up a fuzzy finder to look for a path to change directory to
+#------------------------------------------------------------------------------
+bcd() {
+    cd $(find ${1:-.} -type d -not -name "node_modules" | fzf)
 }
-
-PROMPT=$'\n%F{blue}%n%f  %F{yellow}  %~%f $(git_branch_name)\n 👾 '
-
-#-------------------------------
-# fd - cd to selected directory 
-# FZF needs to be installed     
-#-------------------------------
-fd() {
-    local dirs=$(find ${1:-.} -type d -not \( -name node_modules \) | fzf)
-    print -z cd $dirs
-}
-alias find-dir=fd
+alias better-cd=bcd
 
 
-#----------------------------------------------------------------- 
-# fh - search in your command history and execute selected command 
-# FZF needs to be installed                                        
-#----------------------------------------------------------------- 
+#--------------------------------------------------------------------------------------------
+# fh - open up a fuzzy finder to search in your command history and execute selected command
+#--------------------------------------------------------------------------------------------
 fh() {
-    local hist
-
     # if used in bash replace "fc -l 1" with "history"
     local search_result=$(fc -l 1 | sed 's/ *[0-9]* *//' | sed 's/ *$//' | sort -u | fzf)
 
-    print -z $search_result
+    eval "$search_result"
 }
 alias find-history=fh
 
 #-------------------------------------------------------------------------------------------------------
-# rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder 
+# rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder
 #-------------------------------------------------------------------------------------------------------
 rmn() {
-    local list=$(find ${1:-.} -type d | grep -v submodules | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
-    # local list=$(find ${1:-.} -type d | grep -v ^./node_modules/ | grep node_modules$ | sort -u)
+    local list=$(find ${1:-.} -type d -name "node_modules" -not -path "./node_modules/*" -and -not -path "./submodules/*" | sort -u)
 
-    if [ ! -s $list ]; then
-        echo 'DELETING FOLDERS'
-
-        echo $list | xargs -I{} sh -c "echo ' \033[0;31m-\033[0;0m {}'"
-        echo $list | xargs rm -rf {}
+    if [ -z "$list" ]; then
+        echo -e "\e[0;31mNo node_modules found\e[0m"
     else
-        echo '\033[0;31mNo node_modules found\033[0;0m'
+        echo "DELETING FOLDERS"
+
+        echo "$list" | xargs -I dir sh -c "printf ' \e[0;31m -\e[0m dir\n'"
+        echo "$list" | xargs rm -rf
     fi
 }
 alias rm-node-modules=rmn
@@ -157,16 +149,18 @@ rmi() {
         sudo chmod -R 777 infrastructure && rm -rf infrastructure
 
         if test -d ./infrastructure; then
-            echo '\033[0;31mCould not remove infrastructure folder\033[0;0m'
+            echo -e '\e[0;31mCould not remove infrastructure folder\e[0m'
         else
-            echo '\033[0;32minfrastructure successfully removed\033[0;0m'
+            echo -e '\e[0;32minfrastructure successfully removed\e[0m'
         fi
     else
-        echo '\033[0;31minfrastructure directory not found\033[0;0m'
+        echo -e '\e[0;31minfrastructure directory not found\e[0m'
     fi
 }
 alias rm-infrastructure=rmi
+#endregion
 
+#region --------- ALIASES
 alias dwatch="docker compose watch"
 alias docker-watch=dwatch
 alias dlogs="docker compose logs -f -t"
@@ -177,26 +171,8 @@ alias dup-f-b="docker compose up --force-recreate --build"
 alias ddown="docker compose down"
 alias docker-down=ddown
 
-pwatch() {
-    if [ $# -eq 0 ]
-        pnpm --filter $1 build:watch
-    then
-        echo "No arguments supplied"
-    fi
-}
-alias pnpm-watch=pwatch
-alias plocal=pnpm build:local
-alias pnpm-local=plocal
-
-#---------
-# Aliases 
-#---------
 # general aliases
-# alias ls=exa
-# alias ll="exa -l"
-# alias la="exa -a"
-alias tree="exa --tree"
 alias q=exit
 alias v=nvim
 alias open=explorer.exe
-alias tmux='tmux -2'
+#endregion

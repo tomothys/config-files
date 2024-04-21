@@ -1,4 +1,9 @@
 #region --------- GENERAL
+#set bash into vi mode
+#set -o vi
+bind 'set show-all-if-ambiguous on'
+bind 'TAB:menu-complete'
+
 export EDITOR=nvim
 export TERM=screen-256color
 
