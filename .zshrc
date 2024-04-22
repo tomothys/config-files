@@ -1,4 +1,8 @@
 #region --------- GENERAL 
+autoload -U edit-command-line
+zle -N edit-command-line
+bindkey "^x^e" edit-command-line
+
 # Use modern completion system
 autoload -Uz compinit
 compinit
@@ -25,6 +29,7 @@ unsetopt beep
 bindkey "^[[A" history-beginning-search-backward
 bindkey "^[[B" history-beginning-search-forward
 # bindkey -v # vi mode
+bindkey -e # emacs mode
 
 zstyle ':completion:*' menu select
 
@@ -118,6 +123,17 @@ lfcd() {
 }
 
 
+#--------------------------------------------------------------------------------------------
+# fh - open up a fuzzy finder to search in your command history and execute selected command
+#--------------------------------------------------------------------------------------------
+fh() {
+    # if used in bash replace "fc -l 1" with "history"
+    local command=$(fc -l 1 | sed 's/ *[0-9]* *//' | sed 's/ *$//' | sort -u | fzf)
+    eval "$command"
+}
+alias find-history=fh
+
+
 #-------------------------------------------------------------------------------------------------------
 # rm_node_modules - find and delete all 'node_modules' folders in current directory and packages folder
 #-------------------------------------------------------------------------------------------------------
@@ -134,6 +150,7 @@ rmn() {
     fi
 }
 alias rm-node-modules=rmn
+
 
 rmi() {
     if test -d ./infrastructure; then
@@ -223,10 +240,5 @@ alias vdir='vdir --color=auto'
 alias q=exit
 alias v=nvim
 alias open=explorer.exe
-
-# fh - open up a fuzzy finder to search in your command history and execute selected command
-# if used in bash replace "fc -l 1" with "history"
-alias fh="fc -l 1 | sed 's/ *[0-9]* *//' | sed 's/ *$//' | sort -u | fzf"
-alias find-history=fh
 #endregion
 
