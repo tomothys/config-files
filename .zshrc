@@ -114,7 +114,7 @@ alias better-cd=bcd
 # lf cd - open file explorer to change directory
 #------------------------------------------------
 lfcd() {
-    cd $(lf ${1:-$HOME})
+    cd $(lf -print-last-dir ${1:-$HOME})
 }
 
 
@@ -192,7 +192,7 @@ git push"
             ;;
         *restore)
             echo "git restore"
-            local chosen_files=$(git diff --cached --name-only | fzf | tr "\n" " ")
+            local chosen_files=$(git diff --name-only | fzf | tr "\n" " ")
             eval "git restore $chosen_files && git status"
             ;;
         *commit*-m)
