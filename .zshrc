@@ -79,10 +79,11 @@ esac
 
 #region --------- VOLTA 
 export VOLTA_FEATURE_PNPM=1
+export VOLTA_HOME=$HOME/.volta
 
 case ":$PATH:" in
-  *":$HOME/.volta/bin:"*) ;;
-  *) export PATH="$HOME/.volta/bin:$PATH" ;;
+  *":$VOLTA_HOME/bin:"*) ;;
+  *) export PATH="$VOLTA_HOME/bin:$PATH" ;;
 esac
 #endregion
 
@@ -150,10 +151,11 @@ rmi() {
 }
 alias rm-infrastructure=rmi
 
+
 #--------------------------------------------
 # open fuzzy finder to execute docker binary
 #--------------------------------------------
-dock() {
+d() {
     local commands="docker compose up
 docker compose up --force-recreate --build
 docker compose up -d
@@ -163,8 +165,17 @@ docker compose down -v
 docker compose watch
 docker compose logs -f -t"
 
-    eval "$(echo $commands | fzf)"
+    local chosen_command=$(echo $commands | fzf)
+
+    if [[ ! -z "$chosen_command" ]]; then
+        echo -e "\e[0;32m$chosen_command\e[0m"
+
+        eval "$chosen_command"
+    fi
 }
+alias dock-fuzzy=d
+
+
 #-----------------------------------------
 # open fuzzy finder to execute git binary
 #-----------------------------------------
@@ -182,32 +193,54 @@ git push"
 
     case $chosen_command in
         *status|*commit|*push|*pull)
-            echo $chosen_command
+            echo -e "\e[0;32m$chosen_command\e[0m"
             eval "$chosen_command"
             ;;
         *add)
-            echo "git add"
+            echo -e "\e[0;32mgit add\e[0m"
             local chosen_files=$(git diff --name-only | fzf | tr "\n" " ")
             eval "git add $chosen_files && git status"
             ;;
         *restore)
-            echo "git restore"
+            echo -e "\e[0;32mgit restore\e[0m"
             local chosen_files=$(git diff --name-only | fzf | tr "\n" " ")
             eval "git restore $chosen_files && git status"
             ;;
         *commit*-m)
-            echo "git commit -m"
+            echo -e "\e[0;32mgit commit -m\e[0m"
             printf "Commit message: "
             read message
             git commit -m "$message"
             ;;
         *restore*--staged)
+            echo -e "\e[0;32mgit restore --staged\e[0m"
             echo "git restore --staged"
             local chosen_files=$(git diff --cached --name-only | fzf | tr "\n" " ")
             eval "git restore --staged $chosen_files && git status"
             ;;
     esac
 }
+alias git-fuzzy=g
+
+#---------------------------------------------------
+# open fuzzy finder to execute package.json scripts
+#---------------------------------------------------
+p() {
+    if [[ ! -f package.json ]]; then
+        echo -e "\e[0;31mpackage.json not found\e[0m"
+    elif [ $(jq 'has("scripts")' package.json) = false ]; then
+        echo -e "\e[0;31m'scripts' required\e[0m"
+    else
+        local chosen_script=$(jq '.scripts | keys' package.json | grep '"' | tr -d ' ,"' | fzf)
+
+        if [[ ! -z "$chosen_script" ]]; then
+            echo -e "\e[5m\e[0;32m$chosen_script\e[0m\e[25m"
+
+            eval "pnpm $chosen_script"
+        fi
+    fi
+}
+alias pnpm-fuzzy=p
 #endregion
 
 #region --------- ALIASES
