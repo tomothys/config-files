@@ -180,14 +180,27 @@ docker compose up --force-recreate --build -d
 docker compose down
 docker compose down -v
 docker compose watch
-docker compose logs -f -t"
+docker compose logs -f -t
+docker compose exec ... bash"
 
     local chosen_command=$(echo $commands | fzf)
 
     if [[ ! -z "$chosen_command" ]]; then
-        echo -e "\e[0;32m$chosen_command\e[0m"
+        case $chosen_command in
+        *exec*)
+            echo -e "\e[0;32m$chosen_command\e[0m"
 
-        eval "$chosen_command"
+            printf "Container Compose Name: "
+            read container_name
+
+            echo -e "\e[0;32mdocker compose exec $container_name bash\e[0m"
+            docker compose exec $container_name bash
+            ;;
+        *)
+            echo -e "\e[0;32m$chosen_command\e[0m"
+            eval "$chosen_command"
+            ;;
+	esac
     fi
 }
 alias dock-fuzzy=d
@@ -199,41 +212,51 @@ alias dock-fuzzy=d
 g() {
     local commands="git status
 git pull
+git pull --recurse-submodule
 git add
 git restore
 git commit -m
 git commit
 git restore --staged
-git push"
+git push
+git clone --recurse-submodule"
 
     local chosen_command=$(echo $commands | fzf)
 
     case $chosen_command in
-        *status|*commit|*push|*pull)
-            echo -e "\e[0;32m$chosen_command\e[0m"
-            eval "$chosen_command"
-            ;;
         *add)
-            echo -e "\e[0;32mgit add\e[0m"
+            echo -e "\e[0;32m$chosen_command\e[0m"
             local chosen_files=$(git diff --name-only | fzf | tr "\n" " ")
             eval "git add $chosen_files && git status"
             ;;
         *restore)
-            echo -e "\e[0;32mgit restore\e[0m"
+            echo -e "\e[0;32m$chosen_command\e[0m"
             local chosen_files=$(git diff --name-only | fzf | tr "\n" " ")
             eval "git restore $chosen_files && git status"
             ;;
         *commit*-m)
-            echo -e "\e[0;32mgit commit -m\e[0m"
+            echo -e "\e[0;32m$chosen_command\e[0m"
             printf "Commit message: "
             read message
             git commit -m "$message"
             ;;
         *restore*--staged)
-            echo -e "\e[0;32mgit restore --staged\e[0m"
+            echo -e "\e[0;32m$chosen_command\e[0m"
             echo "git restore --staged"
             local chosen_files=$(git diff --cached --name-only | fzf | tr "\n" " ")
             eval "git restore --staged $chosen_files && git status"
+            ;;
+        *close*)
+            echo -e "\e[0;32m$chosen_command\e[0m"
+            printf "Repository URL: "
+            read url
+            printf "Path: "
+            read path
+            git clone --recurse-submodule $url $path
+            ;;
+        *)
+            echo -e "\e[0;32m$chosen_command\e[0m"
+            eval "$chosen_command"
             ;;
     esac
 }
