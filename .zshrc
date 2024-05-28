@@ -1,14 +1,29 @@
+#region --------- PLUGIN MANAGER
+ZINIT_HOME="$HOME/.local/share/zinit/zinit"
+
+if [ ! -d "$ZINIT_HOME" ]; then
+    mkdir -p "$(dirname $ZINIT_HOME)"
+    git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
+fi
+
+source "${ZINIT_HOME}/zinit.zsh"
+#endregion
+
+#region --------- PLUGINS
+zinit light zsh-users/zsh-syntax-highlighting
+zinit light zsh-users/zsh-completions
+zinit light zsh-users/zsh-autosuggestions
+#endregion
+
 #region --------- GENERAL 
 autoload -U edit-command-line
 zle -N edit-command-line
 bindkey "^x^e" edit-command-line
 
 # Use modern completion system
-autoload -Uz compinit
-compinit
+autoload -Uz compinit && compinit
 
 export EDITOR=nvim
-export TERM=screen-256color
 
 # set PATH so it includes user's private bin if it exists 
 case ":$PATH:" in
@@ -23,15 +38,28 @@ esac
 
 HISTFILE=~/.histfile
 HISTSIZE=1000
-SAVEHIST=1000
-unsetopt beep
+SAVEHIST=$HISTSIZE
+HISTDUP=erase
+setopt appendhistory
+setopt sharehistory
+setopt hist_ignore_space
+setopt hist_ignore_all_dups
+setopt hist_save_no_dups
+setopt hist_ignore_dups
+
+setopt menu_complete
 
 bindkey "^[[A" history-beginning-search-backward
 bindkey "^[[B" history-beginning-search-forward
+bindkey "^p" history-beginning-search-backward
+bindkey "^n" history-beginning-search-forward
 # bindkey -v # vi mode
 bindkey -e # emacs mode
 
+# completion styling
 zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' list-colors '${(s.:.)ls_colors}'
 
 zmodload zsh/complist
 bindkey -M menuselect 'h' vi-backward-char
@@ -42,6 +70,7 @@ bindkey -M menuselect 'o' accept-line
 
 setopt ALWAYS_TO_END
 setopt AUTO_PARAM_SLASH
+unsetopt beep
 #endregion
 
 #region --------- PROMPT 
